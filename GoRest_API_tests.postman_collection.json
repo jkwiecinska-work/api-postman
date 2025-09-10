@@ -1,0 +1,300 @@
+{
+	"info": {
+		"_postman_id": "3b13e696-4b4b-447f-9a9b-049381315b01",
+		"name": "GoRest_API_tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48338011",
+		"_collection_link": "https://jkwiecinska-work-2898940.postman.co/workspace/Justyna-Kwieci%25C5%2584ska's-Workspace~a2441e7a-166f-47a8-8e2e-0d9bab38bc82/collection/48338011-3b13e696-4b4b-447f-9a9b-049381315b01?action=share&source=collection_link&creator=48338011"
+	},
+	"item": [
+		{
+			"name": "Create user",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const timestamp = Date.now();\r",
+							"const randomEmail = `test.user.${timestamp}@example.com`;\r",
+							"\r",
+							"pm.environment.set(\"timestamp\", timestamp);\r",
+							"pm.environment.set(\"random_email\", randomEmail);\r",
+							"\r",
+							"console.log(\"Generated email: \" + randomEmail);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"User created sucessfully\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response contains user data\", function () {\r",
+							"    pm.expect(responseJson).to.have.property('id');\r",
+							"    pm.expect(responseJson).to.have.property('name');\r",
+							"    pm.expect(responseJson).to.have.property('email');\r",
+							"    pm.expect(responseJson).to.have.property('status');\r",
+							"    pm.expect(responseJson.email).to.eql(pm.environment.get(\"random_email\"));\r",
+							"    pm.expect(responseJson.status).to.eql(\"active\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response time is less than 2000 ms\", function (){\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+							"});\r",
+							"\r",
+							"pm.environment.set(\"user_id\", responseJson.id);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Test User {{timestamp}}\",\r\n    \"email\": \"{{random_email}}\",\r\n    \"gender\": \"female\",\r\n    \"status\": \"active\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get user",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const userId = pm.environment.get(\"user_id\");\r",
+							"if (!userId) {\r",
+							"    throw new Error(\"User ID not found. Need to create user first\");\r",
+							"}\r",
+							"console.log(\"Fetching user: \" + userId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"User retrieved successfuly\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"User data is the same as for created data\", function () {\r",
+							"    pm.expect(responseJson.id).to.eql(pm.environment.get(\"user_id\"));\r",
+							"    pm.expect(responseJson.email).to.eql(pm.environment.get(\"random_email\"));\r",
+							"    pm.expect(responseJson.name).to.include(\"Test User\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"All required fields are present\", function () {\r",
+							"    const requiredFields = [\"id\", \"name\", \"email\", \"gender\", \"status\"];\r",
+							"\r",
+							"    requiredFields.forEach(field => {\r",
+							"        pm.expect(responseJson).to.have.property(field);\r",
+							"    });\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/users/{{user_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"{{user_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add user post",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response time is less than 2000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+							"});\r",
+							"\r",
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Post is linked to correct user\", function () {\r",
+							"    \r",
+							"    pm.expect(responseJson.user_id).to.eql(parseInt(pm.environment.get(\"user_id\")));\r",
+							"    pm.environment.set(\"test_post_id\", responseJson.id);\r",
+							"    \r",
+							"    console.log(\"Created post ID: \" + responseJson.id);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Post title meets original value\", function () {\r",
+							"\r",
+							"    pm.expect(responseJson.title).to.include(\"Nice\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const userId = pm.environment.get(\"user_id\");\r",
+							"if (!userId) {\r",
+							"    throw new Error(\"User ID not found. Need to create user first\");\r",
+							"}\r",
+							"console.log(\"Creating post for user: \" + userId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"title\": \"Nice post\",\r\n    \"body\": \"This is a test post created via API automation testing.\",\r\n    \"user_id\": {{user_id}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/posts",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"posts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Change user data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"User updated successfully\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response time is less than 2000ms\", function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+							"});\r",
+							"\r",
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Update data persisted\", function () {\r",
+							"    \r",
+							"    pm.expect(responseJson.name).to.include(\"User set to inactive\");\r",
+							"    pm.expect(responseJson.status).to.eql(\"inactive\");\r",
+							"    pm.expect(responseJson.email).to.eql(pm.environment.get(\"random_email\"));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"User set to inactive\",\r\n    \"status\": \"inactive\",\r\n    \"id\": {{user_id}}\r\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/users/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"pm.environment"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
