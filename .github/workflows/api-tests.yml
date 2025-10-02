@@ -1,0 +1,44 @@
+name: API Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 8 * * 1'
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install Newman
+      run: |
+        npm install -g newman
+        npm install -g newman-reporter-htmlextra
+    
+    - name: Run API Tests
+      run: |
+        newman run postman/GoRest_API_tests.postman_collection.json \
+          -e postman/GoRest_CI.postman_environment.json \
+          --env-var "BASE_URL"=${{ vars.BASE_URL }} \
+          --env-var "ACCESS_TOKEN"=${{ secrets.ACCESS_TOKEN }} \
+          --reporters cli,htmlextra \
+          --reporter-htmlextra-export reports/report.html
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-reports
+        path: reports/
