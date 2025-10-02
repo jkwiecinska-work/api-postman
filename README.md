@@ -2,7 +2,7 @@
 ![API Tests](https://github.com/jkwiecinska-work/api-postman/actions/workflows/api-tests.yml/badge.svg)
 
 
-Internal project for REST API automated tests in Postman, uing [GoRest](https://gorest.co.in) API
+Internal project for REST API automated tests in Postman, using [GoRest](https://gorest.co.in) API
 
 ## Skills showcase
 - API tests automation
