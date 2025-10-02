@@ -7,7 +7,8 @@ Internal project for REST API automated tests in Postman, using [GoRest](https:/
 ## Skills showcase
 - API tests automation
 - CI/CD integration with GitHub Actions
-- Postman/Newman
+- Authorization with bearer token
+- Postman/Newman usage in API testing
 - Secret and variables management
 - Enviromnent management
 - Integration with GitHub issues
