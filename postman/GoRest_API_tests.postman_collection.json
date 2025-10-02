@@ -4,7 +4,7 @@
 		"name": "GoRest_API_tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "48338011",
-		"_collection_link": "https://jkwiecinska-work-2898940.postman.co/workspace/Justyna-Kwieci%25C5%2584ska's-Workspace~a2441e7a-166f-47a8-8e2e-0d9bab38bc82/collection/48338011-3b13e696-4b4b-447f-9a9b-049381315b01?action=share&source=collection_link&creator=48338011"
+		"_collection_link": "https://jkwiecinska-work-2898940.postman.co/workspace/Justyna-Kwieci%C5%84ska's-Workspace~a2441e7a-166f-47a8-8e2e-0d9bab38bc82/collection/48338011-3b13e696-4b4b-447f-9a9b-049381315b01?action=share&source=collection_link&creator=48338011"
 	},
 	"item": [
 		{
@@ -84,20 +84,6 @@
 			"name": "Get user",
 			"event": [
 				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"const userId = pm.environment.get(\"user_id\");\r",
-							"if (!userId) {\r",
-							"    throw new Error(\"User ID not found. Need to create user first\");\r",
-							"}\r",
-							"console.log(\"Fetching user: \" + userId);"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
 					"listen": "test",
 					"script": {
 						"exec": [
@@ -119,7 +105,22 @@
 							"    requiredFields.forEach(field => {\r",
 							"        pm.expect(responseJson).to.have.property(field);\r",
 							"    });\r",
-							"});"
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const userId = pm.environment.get(\"user_id\");\r",
+							"if (!userId) {\r",
+							"    throw new Error(\"User ID not found. Need to create user first\");\r",
+							"}\r",
+							"console.log(\"Fetching user: \" + userId);"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -242,23 +243,50 @@
 						"type": "text/javascript",
 						"packages": {}
 					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
 				}
 			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true,
+					"accept": true
+				}
+			},
 			"request": {
 				"method": "PATCH",
-				"header": [],
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"name\": \"User set to inactive\",\r\n    \"status\": \"inactive\",\r\n    \"id\": {{user_id}}\r\n}"
+					"raw": "{\r\n    \"name\": \"User set to inactive\",\r\n    \"status\": \"inactive\"\r\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/users/",
+					"raw": "{{base_url}}/users/{{user_id}}",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"users",
-						""
+						"{{user_id}}"
 					]
 				}
 			},
