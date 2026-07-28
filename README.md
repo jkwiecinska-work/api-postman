@@ -1,6 +1,5 @@
 # api-postman
-![API Tests](https://github.com/jkwiecinska-work/api-postman/actions/workflows/api-tests.yml/badge.svg)
-
+[![API Tests](https://github.com/jkwiecinska-work/api-postman/actions/workflows/api-tests.yml/badge.svg)](https://github.com/jkwiecinska-work/api-postman/actions/workflows/api-tests.yml)
 
 Internal project for REST API automated tests in Postman, using [GoRest](https://gorest.co.in) API
 
@@ -10,7 +9,7 @@ Internal project for REST API automated tests in Postman, using [GoRest](https:/
 - Authorization with bearer token
 - Postman/Newman usage in API testing
 - Secret and variables management
-- Enviromnent management
+- Environment management
 - Integration with GitHub issues
 
 ### Run locally from CLI
