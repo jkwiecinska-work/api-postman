@@ -8,7 +8,7 @@
 	},
 	"item": [
 		{
-			"name": "Create user",
+			"name": "POST /users - Create new user",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -32,21 +32,16 @@
 						"exec": [
 							"const responseJson = pm.response.json();\r",
 							"\r",
-							"pm.test(\"User created sucessfully\", function () {\r",
-							"    pm.response.to.have.status(201);\r",
-							"});\r",
+							"utils.assertStatus(pm, 201, \"Created\");\r",
+							"utils.assertSla(pm);\r",
 							"\r",
-							"pm.test(\"Response contains user data\", function () {\r",
+							"pm.test(\"Response body contains created user details\", function () {\r",
 							"    pm.expect(responseJson).to.have.property('id');\r",
 							"    pm.expect(responseJson).to.have.property('name');\r",
 							"    pm.expect(responseJson).to.have.property('email');\r",
 							"    pm.expect(responseJson).to.have.property('status');\r",
 							"    pm.expect(responseJson.email).to.eql(pm.environment.get(\"random_email\"));\r",
 							"    pm.expect(responseJson.status).to.eql(\"active\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response time is less than 2000 ms\", function (){\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
 							"});\r",
 							"\r",
 							"pm.environment.set(\"user_id\", responseJson.id);"
@@ -81,32 +76,44 @@
 			"response": []
 		},
 		{
-			"name": "Get user",
+			"name": "GET /users/:id - Fetch user details",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"User retrieved successfuly\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
+							"utils.assertStatus(pm, 200, \"OK\");\r",
 							"\r",
 							"const responseJson = pm.response.json();\r",
 							"\r",
-							"pm.test(\"User data is the same as for created data\", function () {\r",
+							"pm.test(\"Response data matches created user properties\", function () {\r",
 							"    pm.expect(responseJson.id).to.eql(pm.environment.get(\"user_id\"));\r",
 							"    pm.expect(responseJson.email).to.eql(pm.environment.get(\"random_email\"));\r",
 							"    pm.expect(responseJson.name).to.include(\"Test User\");\r",
 							"});\r",
 							"\r",
-							"pm.test(\"All required fields are present\", function () {\r",
+							"pm.test(\"Response contains all required user fields\", function () {\r",
 							"    const requiredFields = [\"id\", \"name\", \"email\", \"gender\", \"status\"];\r",
 							"\r",
 							"    requiredFields.forEach(field => {\r",
 							"        pm.expect(responseJson).to.have.property(field);\r",
 							"    });\r",
 							"});\r",
-							""
+							"\r",
+							"pm.test(\"Response structure conforms to JSON Schema\", function () {\r",
+							"    const userSchema = {\r",
+							"        \"type\": \"object\",\r",
+							"        \"required\": [\"id\", \"name\", \"email\", \"gender\", \"status\"],\r",
+							"        \"properties\": {\r",
+							"            \"id\": { \"type\": \"integer\" },\r",
+							"            \"name\": { \"type\": \"string\" },\r",
+							"            \"email\": { \"type\": \"string\" },\r",
+							"            \"gender\": { \"type\": \"string\" },\r",
+							"            \"status\": { \"type\": \"string\" }\r",
+							"        }\r",
+							"    };\r",
+							"    pm.response.to.have.jsonSchema(userSchema);\r",
+							"});"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -116,11 +123,8 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"const userId = pm.environment.get(\"user_id\");\r",
-							"if (!userId) {\r",
-							"    throw new Error(\"User ID not found. Need to create user first\");\r",
-							"}\r",
-							"console.log(\"Fetching user: \" + userId);"
+							"utils.requireUserId(pm);\r",
+							"console.log(\"Fetching user: \" + pm.environment.get(\"user_id\"));"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -144,32 +148,24 @@
 			"response": []
 		},
 		{
-			"name": "Add user post",
+			"name": "POST /posts - Create user post",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(201);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response time is less than 2000ms\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
+							"utils.assertStatus(pm, 201, \"Created\");\r",
+							"utils.assertSla(pm);\r",
 							"\r",
 							"const responseJson = pm.response.json();\r",
 							"\r",
-							"pm.test(\"Post is linked to correct user\", function () {\r",
-							"    \r",
+							"pm.test(\"Post is correctly linked to existing user ID\", function () {\r",
 							"    pm.expect(responseJson.user_id).to.eql(parseInt(pm.environment.get(\"user_id\")));\r",
 							"    pm.environment.set(\"test_post_id\", responseJson.id);\r",
-							"    \r",
 							"    console.log(\"Created post ID: \" + responseJson.id);\r",
 							"});\r",
 							"\r",
-							"pm.test(\"Post title meets original value\", function () {\r",
-							"\r",
+							"pm.test(\"Post title matches requested value\", function () {\r",
 							"    pm.expect(responseJson.title).to.include(\"Nice\");\r",
 							"});"
 						],
@@ -181,11 +177,8 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"const userId = pm.environment.get(\"user_id\");\r",
-							"if (!userId) {\r",
-							"    throw new Error(\"User ID not found. Need to create user first\");\r",
-							"}\r",
-							"console.log(\"Creating post for user: \" + userId);"
+							"utils.requireUserId(pm);\r",
+							"console.log(\"Creating post for user: \" + pm.environment.get(\"user_id\"));"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -217,24 +210,18 @@
 			"response": []
 		},
 		{
-			"name": "Change user data",
+			"name": "PATCH /users/:id - Update user status",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"User updated successfully\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Response time is less than 2000ms\", function () {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
-							"});\r",
+							"utils.assertStatus(pm, 200, \"OK\");\r",
+							"utils.assertSla(pm);\r",
 							"\r",
 							"const responseJson = pm.response.json();\r",
 							"\r",
-							"pm.test(\"Update data persisted\", function () {\r",
-							"    \r",
+							"pm.test(\"User status is updated to inactive\", function () {\r",
 							"    pm.expect(responseJson.name).to.include(\"User set to inactive\");\r",
 							"    pm.expect(responseJson.status).to.eql(\"inactive\");\r",
 							"    pm.expect(responseJson.email).to.eql(pm.environment.get(\"random_email\"));\r",
@@ -291,6 +278,129 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "POST /users - Reject duplicate email registration",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"utils.assertStatus(pm, 422, \"Unprocessable Entity\");\r",
+							"\r",
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Validation error specifies duplicate email error\", function () {\r",
+							"    pm.expect(responseJson).to.be.an(\"array\");\r",
+							"    pm.expect(responseJson[0].field).to.eql(\"email\");\r",
+							"    pm.expect(responseJson[0].message).to.eql(\"has already been taken\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Duplicate Test User\",\r\n    \"email\": \"{{random_email}}\",\r\n    \"gender\": \"female\",\r\n    \"status\": \"active\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE /users/:id - Delete user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"utils.assertStatus(pm, 204, \"No Content\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"utils.requireUserId(pm);\r",
+							"console.log(\"Deleting user: \" + pm.environment.get(\"user_id\"));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/users/{{user_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"{{user_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET /users/:id - Confirm deleted user returns 404",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"utils.assertStatus(pm, 404, \"Not Found\");\r",
+							"\r",
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Error message indicates resource not found\", function () {\r",
+							"    pm.expect(responseJson.message).to.eql(\"Resource not found\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/users/{{user_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"{{user_id}}"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"auth": {
@@ -310,7 +420,26 @@
 				"type": "text/javascript",
 				"packages": {},
 				"exec": [
-					"pm.environment"
+					"utils = {\r",
+					"    assertStatus: function (pmCtx, statusCode, statusText) {\r",
+					"        pmCtx.test(`Status code is ${statusCode} ${statusText}`, function () {\r",
+					"            pmCtx.response.to.have.status(statusCode);\r",
+					"        });\r",
+					"    },\r",
+					"    assertSla: function (pmCtx, maxMs) {\r",
+					"        const threshold = maxMs || parseInt(pmCtx.environment.get(\"max_response_time_ms\")) || 2000;\r",
+					"        pmCtx.test(`Response time is below ${threshold}ms SLA`, function () {\r",
+					"            pmCtx.expect(pmCtx.response.responseTime).to.be.below(threshold);\r",
+					"        });\r",
+					"    },\r",
+					"    requireUserId: function (pmCtx) {\r",
+					"        const userId = pmCtx.environment.get(\"user_id\");\r",
+					"        if (!userId) {\r",
+					"            throw new Error(\"User ID not found. Need to create user first\");\r",
+					"        }\r",
+					"        return userId;\r",
+					"    }\r",
+					"};"
 				]
 			}
 		},
