@@ -32,3 +32,6 @@ The report provides:
 - Executive summary of passed/failed assertions and execution time.
 - Detailed breakdown per endpoint (`POST`, `GET`, `PATCH`).
 - Artifact availability in GitHub Actions workflows.
+
+### Download test report
+Test report can be retrieved by opening: Tab Actions -> Workflow Run -> Section Artifacts - section includes zip file with test report. 
